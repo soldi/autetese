@@ -1,0 +1,23 @@
+<test>
+  <application name="task_test">
+    <configuration>
+      <trait id="CPUS">
+   			<min>1</min>
+   			<max>4</max>
+      </trait>
+ 			<debug>
+        <path>debugForTaskTest.gdb</path>
+ 			</debug>
+    </configuration>
+  </application>
+  <application name="semaphore_test">
+    <configuration>
+      <trait id="QUANTUM" scope="Thread">
+   			<value>10000</value>
+   			<value>20000</value>
+      </trait>
+ 			<debug>
+ 			</debug>
+    </configuration>
+  </application>
+</test>
