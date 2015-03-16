@@ -46,6 +46,7 @@ def xml_parsing():
         debug_filepath_tag = debug_tag[0].getElementsByTagName("path")
         if len(debug_filepath_tag) > 0:
           debug_filepath = os.path.abspath(debug_filepath_tag[0].childNodes[0].data)
+          debug_filepath = debug_filepath.replace("/", "\/");
 
       options = []
       options_map = {}
@@ -65,7 +66,7 @@ def xml_parsing():
             minimum = int(trait_tag.getElementsByTagName("min")[0].childNodes[0].data)
             maximum = int(trait_tag.getElementsByTagName("max")[0].childNodes[0].data)
             values = map(lambda x: str(x), range(minimum, maximum + 1))
-	 
+   
         if len(values) < 1:
           #for i in range(1, randint(0, 100)):
           for i in range(1, 10):
@@ -75,7 +76,7 @@ def xml_parsing():
         options_map[trait_id] = (trait_scope, values)
         options.append('%s_options=(%s);' % (trait_id.lower(), ' '.join(set(values))))
       
-      with open('%s/tap_%s.sh' % (folder, app_name), 'a') as f:
+      with open('%s/autetese_%s.sh' % (folder, app_name), 'a') as f:
         f.write('#!/bin/bash\n')
         f.write('EPOS_DIR=%s\n' % epos_path)
 #        f.write('START=`date +%H:%M`\n')
@@ -100,8 +101,8 @@ def xml_parsing():
         else:
           f.write('*_test.cc \n')
         f.write("""do \n\tapplication=`echo ${test_file} | cut -d'.' -f 1` \n\ttrait=`echo ${application}_traits.h`\n\tfailure=0\n\tsuccess=0\n\techo "${application}_traits.h"\n """)
-        f.write('\tcp ${application}.cc ${application}.bkp\n')
-        f.write("""\tsed -i '/main()/,/return *;*}/ {s/return/cout << "****TAP - test successful" <<endl;return/g}' ${application}.cc \n\tif [ -e $trait ]; then \n\t\tcp ${trait} ${trait}.bkp \n\telse \n\t\t cp ../../include/system/traits.h ${application}_traits.h \n\tfi \n""")
+        f.write('\tcp ${application}.cc ${application}.cc.bkp\n')
+        f.write("""\tsed -i '/main()/,/return *;*}/ {s/return/cout << "****AUTETESE - test successful" <<endl;return/g}' ${application}.cc \n\tif [ -e $trait ]; then \n\t\tcp ${trait} ${trait}.bkp \n\telse \n\t\t cp ../../include/system/traits.h ${application}_traits.h \n\tfi \n""")
 
         count = 0
         for key in options_map:
@@ -126,24 +127,29 @@ def xml_parsing():
 
         f.write('\t%scd $EPOS_DIR\n'% ('\t' * count))
 
-        f.write('\t%s`make automated_test APPLICATION=${application} 3>&1 1>>log/${log_name} 2>&1`\n'% ('\t' * count))
+        f.write('\t%smake automated_test APPLICATION=${application} 3>&1 1>>log/${log_name} 2>&1\n'% ('\t' * count))
 
-        f.write("\t%sif grep -q '****TAP - test successful' log/${log_name}; then\n"% ('\t' * count))
+        f.write("\t%sif grep -q '****AUTETESE - test successful' log/${log_name}; then\n"% ('\t' * count))
         f.write('\t\t%ssuccess=$((success+1))\n'% ('\t' * count))
         f.write('\t\t%smv log/${log_name} log/_success_${log_name}\n'% ('\t' * count))
         f.write('\t%selse\n'% ('\t' * count))
         f.write('\t\t%sfailure=$((failure+1))\n'% ('\t' * count))
-	
+  
         if debug:
-          f.write('\t\t%sscreen -S qemu -X quit 1> /dev/null\n'% ('\t' * count))
-          f.write('\t\t%sscreen -S gdb -X quit 1> /dev/null\n'% ('\t' * count))
-          f.write('\t\t%sscreen -S qemu -dm bash -c  "qemu-system-i386 -fda $EPOS_DIR/img/${application}.img -serial stdio -s -S"\n' % ('\t' * count))
-          f.write('\t\t%ssleep 1\n'% ('\t' * count))
+          if debug_filepath:       
+            f.write("\t\t%ssed -i 's/$(DEBUGGER) $(APP)\/$(APPLICATION)/$(DEBUGGER) \-x %s $(APP)\/$(APPLICATION)/' $EPOS_DIR/img/makefile\n" % ('\t' * count, debug_filepath))
+            
+          f.write("\t\t%scp src/abstraction/${application}.cc app/${application}.cc \n"% ('\t' * count))
+          f.write("\t\t%scp src/abstraction/${trait} app/${trait} \n"% ('\t' * count))
+
+          f.write('\t\t%smake debug APPLICATION=${application}\n'% ('\t' * count))
+
+          f.write("\t\t%srm app/${application}.cc \n"% ('\t' * count))
+          f.write("\t\t%srm app/${trait} \n"% ('\t' * count))
+
           if debug_filepath:            
-	    			f.write('\t\t%sscreen -S gdb -dm bash -c "gdb --batch -x %s"\n' % ('\t' * count, debug_filepath))
-	    			f.write('\t\t%ssleep 120\n'% ('\t' * count))
-          else:
-          	f.write('\t\t%sgdb -ex "target remote:1234" -ex "set confirm off"\n' % ('\t' * count))
+            f.write("\t\t%ssed -i 's/$(DEBUGGER) \-x %s $(APP)\/$(APPLICATION)/$(DEBUGGER) $(APP)\/$(APPLICATION)/' $EPOS_DIR/img/makefile\n" % ('\t' * count, debug_filepath))
+            # f.write('\t\t%sgdb -ex "target remote:1234" -ex "set confirm off"\n' % ('\t' * count))
         f.write('\t%sfi\n'% ('\t' * count))
 
         f.write('\t%scd $EPOS_DIR/src/abstraction\n'% ('\t' * count))
@@ -159,8 +165,8 @@ def xml_parsing():
 
         f.write('\tcp ${trait}".bkp" ${trait}\n')
         f.write('\trm ${trait}".bkp"\n')
-        f.write('\tcp ${application}.bkp ${application}.cc\n')
-        f.write('\trm ${application}.bkp\n')
+        f.write('\tcp ${application}.cc.bkp ${application}.cc\n')
+        f.write('\trm ${application}.cc.bkp\n')
         f.write('done\n')
 #        f.write("END=`date +%H:%M`\n")
 #        f.write('diff=$(  echo "$END - $START"')
@@ -169,7 +175,7 @@ def xml_parsing():
       f.closed
 
     else:
-      with open('%s/tap_%s.sh' % (folder, app_name), 'a') as f:
+      with open('%s/autetese_%s.sh' % (folder, app_name), 'a') as f:
         f.write(random_content(app_name))
       f.closed
 
@@ -219,10 +225,10 @@ if __name__ == "__main__":
   global epos_path
   global folder
 
-  parser = argparse.ArgumentParser(description='Process XML file and outputs TAP scripts.')
+  parser = argparse.ArgumentParser(description='Process XML file and outputs AUTETESE scripts.')
   parser.add_argument('--filename', required=True, help='The XML configuration filename (with the .xml extension).')
   parser.add_argument('--epospath', required=True, help='The absolute path for EPOS.')
-  parser.add_argument('--execute', default=False, action='store_true', help='Execute TAP scripts after configuration.')
+  parser.add_argument('--execute', default=False, action='store_true', help='Execute AUTETESE scripts after configuration.')
 
   args = parser.parse_args()
   xml_name = args.filename
