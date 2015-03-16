@@ -1,3 +1,4 @@
+# AUTETESE
 **AUTETESE** (AUTomação da Execução de TEstes de Software Embarcado) é um ambiente que visa a automação da execução dos testes de software embarcado utilizando o sistema operacional EPOS. Em AUTETESE o conjunto de testes é executado automaticamente para cada mudança realizada no sistema.
 Dentre as suas principais características estão a simplicidade para a configuração do ambiente, a execução dos testes de forma transparente e a legibilidade nos resultados obtidos.
 
@@ -9,6 +10,7 @@ Para utilizar o ambiente AUTETESE é necessário um sistema operacional Linux e 
  * [QEMU](http://wiki.qemu.org/Main_Page)
  * [GDB](http://www.gnu.org/software/gdb/)
  * [Python](https://www.python.org/)
+ * [Screen](http://www.gnu.org/software/screen/)
 
 ## Como usar
 Antes de utilizar o ambiente, é necessária uma configuração dos testes que serão executados automaticamente. A configuração possui um comando help que exibe as seguintes opções de uso: 
@@ -34,7 +36,11 @@ Para executar este exemplo deve-se primeiro baixar este projeto em sua máquina 
 
 Uma vez dentro da pasta autetese, executar o seguinte comando abaixo, onde `[caminho para EPOS]` deve ser substituído pelo caminho onde encontra-se a sua instalação do EPOS:
 
-`python configure.py --epospath=[caminho para EPOS] --filename=demo.xml`
+`python configure.py --epospath=[caminho para EPOS] --filename=demo.xml --execute`
+
+A configuração do ambiente produz um arquivo de configuração para cada teste que será automatizado. Cada configuração possui um repositório identificado pelo nome do XML (neste caso, demo) e que dentro possui todos os scripts de troca de parâmetros (identificados pelo nome da aplicação de teste). O usuário pode optar por executar o ambiente logo após a configuração adicionando o parâmetro `--execute`. 
+
+Caso o usuário deseje apenas configurar o ambiente e executar os testes manualmente em outro momento, basta suprimir esta opção. Para executar os testes posteriormente, deve-se entrar na pasta do repositório que deseja utilizar, identificar a aplicação de teste e executá-la através do comando **sh**.
 
 No arquivo **demo.xml** encontram-se as configurações para os testes **task_test** e **semaphore_test**, conforme descrito abaixo:
 ```
