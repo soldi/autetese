@@ -86,8 +86,7 @@ def xml_parsing():
 
         f.write('cd $EPOS_DIR \n\n')
         f.write('grep -q -F "automated_test" makefile ||')
-        f.write(""" echo "\n\nautomated_test:\\n\\t\\$(INSTALL) \\$(SRC)/abstraction/\\$(APPLICATION).cc \\$(APP)\\n\\t\\$(INSTALL) \\$(SRC)/abstraction/\\$(APPLICATION)_traits.h \\$(APP)\\n\\t\\$(MAKETEST) clean1 run1\\n\\t\\$(CLEAN) \\$(APP)/\\$(APPLICATION)*\\n" >> makefile\n""")
-        #f.write("""sed -i "s/include makedefs/include makedefs \\n\\nautomated_test: \\n\\t\\$\(INSTALL\) \\$\(SRC\)\/abstraction\/\\$\(APPLICATION\).cc \\$\(APP\) \\n\\t\$\(INSTALL\) \\$\(SRC\)\/abstraction\/\\$\(APPLICATION\)_traits.h \\$\(APP\) \\n\\t\\$\(MAKETEST\) clean1 run1 \\n\\t\\$\(CLEAN\) \\$\(APP\)\/\\$\(APPLICATION\)\* \\n/g" makefile\n""")
+        f.write(""" echo "\n\nautomated_test:\n\t\\$(INSTALL) \\$(SRC)/abstraction/\\$(APPLICATION).cc \\$(APP)\n\t\\$(INSTALL) \\$(SRC)/abstraction/\\$(APPLICATION)_traits.h \\$(APP)\n\t\\$(MAKETEST) clean1 run1\n\t\\$(CLEAN) \\$(APP)/\\$(APPLICATION)*\n" >> makefile\n""")
         f.write('sed -i "s/\\$(MACH_PC)_CC_FLAGS.*/\\$(MACH_PC)_CC_FLAGS     := -ggdb -Wa,--32/g" makedefs \n\n')
 
         f.write('echo "= = = = = TEST REPORT = = = = =" >> ${email_body}\n')
