@@ -8,9 +8,8 @@ Para utilizar o ambiente AUTETESE é necessário um sistema operacional Linux e 
 ## Dependências
  * [EPOS](http://epos.lisha.ufsc.br/HomePage)
  * [QEMU](http://wiki.qemu.org/Main_Page)
- * [GDB](http://www.gnu.org/software/gdb/)
+ * [GDB - versão >= 7.9](http://www.gnu.org/software/gdb/)
  * [Python](https://www.python.org/)
- * [Screen](http://www.gnu.org/software/screen/)
 
 ## Como usar
 Antes de utilizar o ambiente, é necessária uma configuração dos testes que serão executados automaticamente. A configuração possui um comando help que exibe as seguintes opções de uso: 
