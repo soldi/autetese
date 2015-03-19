@@ -121,7 +121,7 @@ def xml_parsing():
         f.write('"\n')
 
         f.write('\t%slog_name=${application}'% ('\t' * count))
-        map(lambda k: f.write('_%s_$%s' % (k, k.lower())), options_map)
+        map(lambda k: f.write('_%s_${%s}' % (k, k.lower())), options_map)
         f.write('.log\n')
 
         f.write('\t%scd $EPOS_DIR\n'% ('\t' * count))
