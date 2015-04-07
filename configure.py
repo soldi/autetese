@@ -110,7 +110,7 @@ def xml_parsing():
           f.write('%sdo \n' % ('\t' * count))
 
           if options_map[key][0]:
-            f.write('\t%ssed -i "/template <> struct Traits<%s>: public Traits<void>/,// {s/^\\([a-zA-Z0-9[:space:]]*%s[[:space:]]*=[[:space:]]*\\).*\\$/\\1$%s;/g}" $trait \n\n' % ('\t' * count, options_map[key][0], key, key.lower()))
+            f.write('\t%ssed -i "/Traits<%s>: /,// {s/^\\([a-zA-Z0-9[:space:]]*%s[[:space:]]*=[[:space:]]*\\).*\\$/\\1$%s;/g}" $trait \n\n' % ('\t' * count, options_map[key][0], key, key.lower()))
           else:
             f.write('\t%ssed -i "s/static const unsigned int %s.*/static const unsigned int %s = $%s;/g" $trait \n' % ('\t' * count, key, key, key.lower()))
             f.write('\t%ssed -i "s/static const int %s.*/static const int %s = $%s;/g" $trait \n' % ('\t' * count, key, key, key.lower()))
@@ -137,18 +137,12 @@ def xml_parsing():
         if debug:
           if debug_filepath:       
             f.write("\t\t%ssed -i 's/$(DEBUGGER) $(APP)\/$(APPLICATION)/$(DEBUGGER) \-x %s $(APP)\/$(APPLICATION)/' $EPOS_DIR/img/makefile\n" % ('\t' * count, debug_filepath))
-            
-          f.write("\t\t%scp src/abstraction/${application}.cc app/${application}.cc \n"% ('\t' * count))
-          f.write("\t\t%scp src/abstraction/${trait} app/${trait} \n"% ('\t' * count))
 
           f.write('\t\t%smake debug APPLICATION=${application}\n'% ('\t' * count))
 
-          f.write("\t\t%srm app/${application}.cc \n"% ('\t' * count))
-          f.write("\t\t%srm app/${trait} \n"% ('\t' * count))
-
           if debug_filepath:            
             f.write("\t\t%ssed -i 's/$(DEBUGGER) \-x %s $(APP)\/$(APPLICATION)/$(DEBUGGER) $(APP)\/$(APPLICATION)/' $EPOS_DIR/img/makefile\n" % ('\t' * count, debug_filepath))
-            # f.write('\t\t%sgdb -ex "target remote:1234" -ex "set confirm off"\n' % ('\t' * count))
+    
         f.write('\t%sfi\n'% ('\t' * count))
 
         f.write('\t%scd $EPOS_DIR/src/abstraction\n'% ('\t' * count))
