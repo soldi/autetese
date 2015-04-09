@@ -75,8 +75,8 @@ A configuração de AUTETESE deve iniciar com a tag <test>, que identifica que u
  * `<application>` que juntamente com o descritor 'name', deve ser preenchida com a aplicação teste que será executada. É possível apontar mais de um teste no arquivo de configuração, mas cada um deve possuir seus próprios parâmetros de execução. Ou seja, todas as definições <application> devem ser filhas de um <test>.
  * `<configuration>` é uma tag agrupadora para todas as configurações de um caso de teste. Com esta separação estrutural é possível especificar vários casos de teste para uma mesma aplicação.
  * `<trait>` é onde são definidos os parâmetros que serão analisados nos casos de teste. Esta tag possui o descritor 'id' para armazenar o nome da configuração e o descritor 'scope' para os casos em que o parâmetro deve ser verificado dentro de um escopo específico da aplicação.
- * `<min>` e `<max>` são utilizadas para a definição de valor mínimo e máximo que determinada configuração pode atingir. Estas tags devem ser preenchidas em conjunto e qualquer valor inteiro presente neste intervalo é considerado válido.
- * `<value>` define um valor específico de configuração e deve ser utilizada para discriminar todos os possíves valores para uma configuração, cada um deles deve ser apresentado em uma nova definição de <value>.
+ * `<min>` e `<max>` são utilizadas para a definição de valores mínimo e máximo que determinada configuração pode atingir. Estas tags devem ser preenchidas em conjunto e qualquer valor inteiro presente neste intervalo é considerado válido.
+ * `<value>` define um valor específico de configuração e deve ser utilizada para discriminar todos os possíves valores inteiros para uma configuração, sendo que cada um deve ser apresentado em uma nova definição de `<value>`.
  * `<debug>` - define onde encontra-se o arquivo de depuração. O caminho até o arquivo é representado em <path> e, preferencialmente, iniciar-se com a referência do diretório raiz (/). O usuário pode optar pela forma manual, configurando a tag sem um arquivo de depuração.
 
 # Futuro
