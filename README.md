@@ -21,8 +21,7 @@ Process XML file and outputs TAP scripts.
 
 optional arguments:
   -h, --help           show this help message and exit
-  --filename FILENAME  The XML configuration filename (with the .xml
-                       extension).
+  --filename FILENAME  The XML configuration filename (with the .xml extension).
   --epospath EPOSPATH  The absolute path for EPOS.
   --execute            Execute TAP scripts after configuration.
 ```
@@ -33,7 +32,7 @@ Para executar este exemplo deve-se primeiro baixar este projeto em sua máquina 
 
 `git clone https://github.com/soldi/autetese.git`
 
-Uma vez dentro da pasta autetese, executar o seguinte comando abaixo, onde `[caminho para EPOS]` deve ser substituído pelo caminho onde encontra-se a sua instalação do EPOS:
+Uma vez dentro da pasta autetese, executar o seguinte comando abaixo, onde `[caminho para EPOS]` deve ser substituído pelo caminho completo (partindo do diretório raiz) onde encontra-se a sua instalação do EPOS:
 
 `python configure.py --epospath=[caminho para EPOS] --filename=demo.xml --execute`
 
@@ -47,8 +46,8 @@ No arquivo **demo.xml** encontram-se as configurações para os testes **task_te
   <application name="task_test">
     <configuration>
       <trait id="CPUS">
-   			<min>1</min>
-   			<max>4</max>
+   			<min>-1</min>
+   			<max>1</max>
       </trait>
  			<debug>
         <path>debugForTaskTest.gdb</path>
@@ -67,7 +66,7 @@ No arquivo **demo.xml** encontram-se as configurações para os testes **task_te
   </application>
 </test>
 ```
-Neste XML, o teste **task_test** está configurado para trocar o trait **CPUS** por valores entre 1 e 4 (inclusive) e, caso a aplicação apresente um resultado diferente do esperado, o ambiente deve utilizar o arquivo **debugForTaskTest.gdb** para depurar o sistema. No caso da automação de **semaphore_test**, o trait modificado será o **QUANTUM** que encontra-se no escopo **Thread**, que pode apenas conter os valores **10000** e **20000**. Este último teste possui a tag **debug**, mas sem um arquivo, identificando que o usuário deseja realizar a depuração manualmente.
+Neste XML, o teste **task_test** está configurado para trocar o trait **CPUS** por valores entre -1 e 1 (inclusive) e, caso a aplicação apresente um resultado diferente do esperado, o ambiente deve utilizar o arquivo **debugForTaskTest.gdb** para depurar o sistema. No caso da automação de **semaphore_test**, o trait modificado será o **QUANTUM** que encontra-se no escopo **Thread**, que pode apenas conter os valores **10000** e **20000**. Este último teste possui a tag **debug**, mas sem um arquivo, identificando que o usuário deseja realizar a depuração manualmente.
 
 Além das tags contidas no exemplo, AUTETESE possui outras opções de configuração. Abaixo encontram-se mais detalhes de como preencher o arquivo XML de configuração do ambiente.
 
