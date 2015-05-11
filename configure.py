@@ -24,7 +24,6 @@ def xml_parsing():
     shutil.rmtree(log_folder_path)
   except:
     pass
-
   os.makedirs(log_folder_path)
   os.makedirs(complete_folder_path)
   test_tag = DOMTree.getElementsByTagName("test")[0]
@@ -35,7 +34,6 @@ def xml_parsing():
     debug_filepath = None
 
     if app_tag.hasAttribute("name"):
-      # Output
       app_name = app_tag.getAttribute("name")
 
     configs = app_tag.getElementsByTagName("configuration")
@@ -47,7 +45,6 @@ def xml_parsing():
         if len(debug_filepath_tag) > 0:
           debug_filepath = os.path.abspath(debug_filepath_tag[0].childNodes[0].data)
           debug_filepath = debug_filepath.replace("/", "\/");
-
       options = []
       options_map = {}
       traits = configs[0].getElementsByTagName("trait")
@@ -73,9 +70,10 @@ def xml_parsing():
             values.append(str(randint(0, 1000)))
         
         # Output
-        options_map[trait_id] = (trait_scope, values)
-        options.append('%s_options=(%s);' % (trait_id.lower(), ' '.join(set(values))))
-      
+        key = (trait_scope.lower() + '_' if trait_scope else '') + trait_id.lower()
+        options_map[key] = (trait_scope, values)
+        options.append('%s_options=(%s);' % (key, ' '.join(set(values))))
+
       with open('%s/autetese_%s.sh' % (folder, app_name), 'a') as f:
         f.write('#!/bin/bash\n')
         f.write('EPOS_DIR=%s\n' % epos_path)
@@ -86,7 +84,8 @@ def xml_parsing():
 
         f.write('cd $EPOS_DIR \n\n')
         f.write('grep -q -F "automated_test" makefile ||')
-        f.write(""" echo "\n\nautomated_test:\n\t\\$(INSTALL) \\$(SRC)/abstraction/\\$(APPLICATION).cc \\$(APP)\n\t\\$(INSTALL) \\$(SRC)/abstraction/\\$(APPLICATION)_traits.h \\$(APP)\n\t\\$(MAKETEST) clean1 run1\n\t\\$(CLEAN) \\$(APP)/\\$(APPLICATION)*\n" >> makefile\n""")
+        f.write(""" echo "\n\nautomated_test:\n\t\\$(INSTALL) \\$(SRC)/abstraction/\\$(APPLICATION).cc \\$(APP)\n\t\\$(INSTALL) \\$(SRC)/abstraction/\\$(APPLICATION)_traits.h \\$(APP)\n\t\\$(MAKETEST) APPLICATION=\\$(APPLICATION) prebuild_\\$(APPLICATION) clean1 all1 posbuild_\\$(APPLICATION) prerun_\\$(APPLICATION) run1 posbuild_\\$(APPLICATION)\n\t\\$(CLEAN) \\$(APP)/\\$(APPLICATION)*\n" >> makefile\n""")
+          
         f.write('sed -i "s/\\$(MACH_PC)_CC_FLAGS.*/\\$(MACH_PC)_CC_FLAGS     := -ggdb -Wa,--32/g" makedefs \n\n')
 
         f.write('echo "= = = = = TEST REPORT = = = = =" >> ${email_body}\n')
@@ -106,7 +105,7 @@ def xml_parsing():
         count = 0
         for key in options_map:
           count += 1
-          f.write('%sfor %s in "${%s_options[@]}" \n' % ('\t' * count, key.lower(),key.lower()))
+          f.write('%sfor %s in "${%s_options[@]}" \n' % ('\t' * count, key.lower(), key.lower()))
           f.write('%sdo \n' % ('\t' * count))
 
           if options_map[key][0]:
@@ -136,9 +135,13 @@ def xml_parsing():
   
         if debug:
           if debug_filepath:       
-            f.write("\t\t%ssed -i 's/$(DEBUGGER) $(APP)\/$(APPLICATION)/$(DEBUGGER) \-x %s $(APP)\/$(APPLICATION)/' $EPOS_DIR/img/makefile\n" % ('\t' * count, debug_filepath))
+            f.write("""\t\t%ssed -i 's/$(DEBUGGER) $(APP)\/$(APPLICATION)/$(DEBUGGER) \-x "%s" $(APP)\/$(APPLICATION)/' $EPOS_DIR/img/makefile\n""" % ('\t' * count, debug_filepath))
 
+          f.write('\t\t%scp $EPOS_DIR/src/abstraction/${trait} $EPOS_DIR/app/${trait}\n'% ('\t' * count))
+          f.write('\t\t%scp $EPOS_DIR/src/abstraction/${application}.cc $EPOS_DIR/app/${application}.cc\n'% ('\t' * count))
           f.write('\t\t%smake debug APPLICATION=${application}\n'% ('\t' * count))
+          f.write('\t\t%srm $EPOS_DIR/app/${trait} \n'% ('\t' * count))
+          f.write('\t\t%srm $EPOS_DIR/app/${application}.cc\n'% ('\t' * count))
 
           if debug_filepath:            
             f.write("\t\t%ssed -i 's/$(DEBUGGER) \-x %s $(APP)\/$(APPLICATION)/$(DEBUGGER) $(APP)\/$(APPLICATION)/' $EPOS_DIR/img/makefile\n" % ('\t' * count, debug_filepath))
