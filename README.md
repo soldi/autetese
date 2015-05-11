@@ -38,7 +38,7 @@ Uma vez dentro da pasta autetese, executar o seguinte comando abaixo, onde `[cam
 
 A configuração do ambiente produz um arquivo de configuração para cada teste que será automatizado. Cada configuração possui um repositório identificado pelo nome do XML (neste caso, demo) e que dentro possui todos os scripts de troca de parâmetros (identificados pelo nome da aplicação de teste). O usuário pode optar por executar o ambiente logo após a configuração adicionando o parâmetro `--execute`. 
 
-Caso o usuário deseje apenas configurar o ambiente e executar os testes manualmente em outro momento, basta suprimir esta opção. Para executar os testes posteriormente, deve-se entrar na pasta do repositório que deseja utilizar, identificar a aplicação de teste e executá-la através do comando **sh**.
+Caso o usuário deseje apenas configurar o ambiente e executar os testes manualmente em outro momento, basta suprimir esta opção. Para executar os testes posteriormente, deve-se entrar na pasta do repositório que deseja utilizar, identificar a aplicação de teste e executá-la através do comando **sh**. Como resultado da execução dos scripts de troca de parâmetros, AUTETESE gera uma pasta de logs da execução, contida na pasta `[caminho para EPOS]/log`.
 
 No arquivo **demo.xml** encontram-se as configurações para os testes **task_test** e **semaphore_test**, conforme descrito abaixo:
 ```
