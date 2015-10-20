@@ -69,28 +69,31 @@ def xml_parsing():
           for i in range(1, 10):
             values.append(str(randint(0, 1000)))
         
-        # Output
-        key = (trait_scope.lower() + '_' if trait_scope else '') + trait_id.lower()
+        #Output
+        key = (trait_scope + '_' if trait_scope else '') + trait_id
         options_map[key] = (trait_scope, values)
         options.append('%s_options=(%s);' % (key, ' '.join(set(values))))
 
       with open('%s/autetese_%s.sh' % (folder, app_name), 'a') as f:
         f.write('#!/bin/bash\n')
         f.write('EPOS_DIR=%s\n' % epos_path)
-#        f.write('START=`date +%H:%M`\n')
+        #f.write('START=`date +%H:%M`\n')
         f.write('email_body=$EPOS_DIR/report.log \n')
-        map(lambda o: f.write('%s\n' % o), options)
+        map(lambda o: f.write('%s\n' % o.lower()), options)
         f.write('failure=0; \nsuccess=0;\n\n')
 
         f.write('cd $EPOS_DIR \n\n')
         f.write('grep -q -F "automated_test" makefile ||')
-        f.write(""" echo "\n\nautomated_test:\n\t\\$(INSTALL) \\$(SRC)/abstraction/\\$(APPLICATION).cc \\$(APP)\n\t\\$(INSTALL) \\$(SRC)/abstraction/\\$(APPLICATION)_traits.h \\$(APP)\n\t\\$(MAKETEST) APPLICATION=\\$(APPLICATION) prebuild_\\$(APPLICATION) clean1 all1 posbuild_\\$(APPLICATION) prerun_\\$(APPLICATION) run1 posbuild_\\$(APPLICATION)\n\t\\$(CLEAN) \\$(APP)/\\$(APPLICATION)*\n" >> makefile\n""")
-          
-        f.write('sed -i "s/\\$(MACH_PC)_CC_FLAGS.*/\\$(MACH_PC)_CC_FLAGS     := -ggdb -Wa,--32/g" makedefs \n\n')
-
+        f.write(""" echo "\n\nautomated_test:\n\t\\$(INSTALL) \\$(SRC)/abstraction/\\$(APPLICATION).cc \\$(APP)\n\t\\$(INSTALL) \\$(SRC)/abstraction/\\$(APPLICATION)_traits.h \\$(APP)\n\t\\$(MAKETEST) APPLICATION=\\$(APPLICATION) prebuild_\\$(APPLICATION) clean1 all1 posbuild_\\$(APPLICATION) prerun_\\$(APPLICATION) run1 posbuild_\\$(APPLICATION)\n\t\\$(CLEAN) \\$(APP)/\\$(APPLICATION)*\n" >> makefile\n""")       
+        f.write('sed -i "s/\\$(MACH_PC)_CC_FLAGS.*/\\$(MACH_PC)_CC_FLAGS     := -ggdb -Wa,--32/g" makedefs \n')
+        gdb_filepath = epos_path.replace("/", "\/") + "log\\/gdb_file.txt";
+        f.write("""sed -i 's/gdb -ex "target remote:1234" -ex "set confirm off"/gdb -ex "set confirm off" -ex "set logging file %s" -ex "set logging on" gdb -ex "target remote:1234"/g' makedefs\n""" % (gdb_filepath))
+    
         f.write('echo "= = = = = TEST REPORT = = = = =" >> ${email_body}\n')
+        f.write('echo "= Execution =" >> ${email_body}\n')
+        f.write('echo "script: autetese_%s.sh" >> ${email_body}\n' % (app_name))
         f.write('echo "= Configurations =">> ${email_body}\n')
-        map(lambda k: f.write('echo "%s: %s" >> ${email_body}\n' % (k, ', '.join(options_map[k][1]))), options_map)
+        map(lambda k: f.write('echo "%s: %s" >> ${email_body}\n' % (k.lower(), ', '.join(options_map[k][1]))), options_map)
 
         f.write('cd $EPOS_DIR/src/abstraction \n\n')
         f.write('for test_file in ')
@@ -109,7 +112,8 @@ def xml_parsing():
           f.write('%sdo \n' % ('\t' * count))
 
           if options_map[key][0]:
-            f.write('\t%ssed -i "/Traits<%s>: /,// {s/^\\([a-zA-Z0-9[:space:]]*%s[[:space:]]*=[[:space:]]*\\).*\\$/\\1$%s;/g}" $trait \n\n' % ('\t' * count, options_map[key][0], key, key.lower()))
+            trait_name = key.split("_")[1]
+            f.write('\t%ssed -i "/Traits<%s>: /,// {s/^\\([a-zA-Z0-9[:space:]]*%s[[:space:]]*=[[:space:]]*\\).*\\$/\\1$%s;/g}" $trait \n\n' % ('\t' * count, options_map[key][0], trait_name, key.lower()))
           else:
             f.write('\t%ssed -i "s/static const unsigned int %s.*/static const unsigned int %s = $%s;/g" $trait \n' % ('\t' * count, key, key, key.lower()))
             f.write('\t%ssed -i "s/static const int %s.*/static const int %s = $%s;/g" $trait \n' % ('\t' * count, key, key, key.lower()))
@@ -120,7 +124,7 @@ def xml_parsing():
         f.write('"\n')
 
         f.write('\t%slog_name=${application}'% ('\t' * count))
-        map(lambda k: f.write('_%s_${%s}' % (k, k.lower())), options_map)
+        map(lambda k: f.write('_%s_${%s}' % (k.lower(), k.lower())), options_map)
         f.write('.log\n')
 
         f.write('\t%scd $EPOS_DIR\n'% ('\t' * count))
@@ -137,14 +141,21 @@ def xml_parsing():
           if debug_filepath:       
             f.write("""\t\t%ssed -i 's/$(DEBUGGER) $(APP)\/$(APPLICATION)/$(DEBUGGER) \-x "%s" $(APP)\/$(APPLICATION)/' $EPOS_DIR/img/makefile\n""" % ('\t' * count, debug_filepath))
 
-          f.write('\t\t%scp $EPOS_DIR/src/abstraction/${trait} $EPOS_DIR/app/${trait}\n'% ('\t' * count))
-          f.write('\t\t%scp $EPOS_DIR/src/abstraction/${application}.cc $EPOS_DIR/app/${application}.cc\n'% ('\t' * count))
+          f.write('\t\t%scp src/abstraction/${trait} app/${trait}\n'% ('\t' * count))
+          f.write('\t\t%scp src/abstraction/${application}.cc app/${application}.cc\n'% ('\t' * count))
           f.write('\t\t%smake debug APPLICATION=${application}\n'% ('\t' * count))
-          f.write('\t\t%srm $EPOS_DIR/app/${trait} \n'% ('\t' * count))
-          f.write('\t\t%srm $EPOS_DIR/app/${application}.cc\n'% ('\t' * count))
+          f.write('\t\t%sif [ -e log/gdb_file.txt ]; then\n'% ('\t' * count))
+          f.write('\t\t\t%secho "\n\n .............................\n...Debugging information... \n............................." >> log/${log_name}\n'% ('\t' * count))
+          f.write('\t\t\t%scat log/gdb_file.txt >> log/${log_name}\n'% ('\t' * count))
+          f.write('\t\t\t%srm log/gdb_file.txt\n'% ('\t' * count))
+          f.write('\t\t%selse\n'% ('\t' * count))
+          f.write('\t\t\t%secho "\n\n .............................\n .There are no debugging information for this application. \n............................." >> log/${log_name}\n'% ('\t' * count))
+          f.write('\t\t%sfi\n'% ('\t' * count))
+          f.write('\t\t%srm app/${trait} \n'% ('\t' * count))
+          f.write('\t\t%srm app/${application}.cc\n'% ('\t' * count))
 
           if debug_filepath:            
-            f.write("\t\t%ssed -i 's/$(DEBUGGER) \-x %s $(APP)\/$(APPLICATION)/$(DEBUGGER) $(APP)\/$(APPLICATION)/' $EPOS_DIR/img/makefile\n" % ('\t' * count, debug_filepath))
+            f.write("""\t\t%ssed -i 's/$(DEBUGGER) \-x "%s" $(APP)\/$(APPLICATION)/$(DEBUGGER) $(APP)\/$(APPLICATION)/' $EPOS_DIR/img/makefile\n""" % ('\t' * count, debug_filepath))
     
         f.write('\t%sfi\n'% ('\t' * count))
 
@@ -152,22 +163,20 @@ def xml_parsing():
 
         map(lambda x: f.write('%sdone\n' % ('\t' * x)), reversed(range(1, count + 1)))
 
-        f.write('\techo "= Application: ${application} =">> ${email_body}\n')
+        f.write('\techo "\n= Application: ${application} =">> ${email_body}\n')
         f.write('\techo "Successful tests:${success} - Failed tests:${failure}" >> ${email_body}\n')
 
         f.write('\tif [ "${failure}" -gt 0 ]; then\n')
-        f.write('\t\techo "Failed tests execution log and debugging information on attachment.\n\n" >> ${email_body}\n')
+        f.write('\t\techo "Failed tests execution log and debugging information on attachment." >> ${email_body}\n')
         f.write('\tfi\n')
 
+        f.write('\t\techo "\n\n" >> ${email_body}\n')
         f.write('\tcp ${trait}".bkp" ${trait}\n')
         f.write('\trm ${trait}".bkp"\n')
         f.write('\tcp ${application}.cc.bkp ${application}.cc\n')
         f.write('\trm ${application}.cc.bkp\n')
         f.write('done\n')
-#        f.write("END=`date +%H:%M`\n")
-#        f.write('diff=$(  echo "$END - $START"')
-#        f.write(" | sed 's%:%+(1/216000)*%g' | bc -l )\n")
-#        f.write('echo "Elapsed time: $diff hours" >> ${email_body}\n')
+        f.write("""sed -i 's/gdb -ex "set confirm off"/gdb -ex "target remote:1234" -ex "set confirm off"/g' $EPOS_DIR/makedefs\n""")
       f.closed
 
     else:
